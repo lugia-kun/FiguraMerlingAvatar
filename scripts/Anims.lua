@@ -38,6 +38,8 @@ v.legs = 1
 -- Variables
 local waterTimer = 0
 local canTwirl = false
+local oldVel = vectors.vec3(0.0, 0.0, 0.0)
+local acchist = {}
 
 -- Arms setup
 local leftArmLerp  = lerp.new(armsMove.curr and 1 or 0, 0.5)
@@ -105,7 +107,29 @@ function events.TICK()
 	local bodyYaw = player:getBodyYaw()
 	local dir = vec(math.sin(math.rad(-bodyYaw)), 0, math.cos(math.rad(-bodyYaw)))
 	local onGround = ground()
-	
+
+	local acc = nil
+	local veh = player:getVehicle()
+	if veh then
+		if veh:getType() == "create:carriage_contraption" then
+			acc = veh:getVelocity()
+		else
+			acc = vectors.vec3(vel.x, vel.y, vel.z)
+		end
+	else
+		acc = vectors.vec3(0.0, 0.0, 0.0)
+	end
+	acc:sub(oldVel)
+	if #acchist > 9 then
+		table.remove(acchist, 1)
+	end
+	table.insert(acchist, #acchist + 1, acc)
+	local aveacc = vectors.vec3()
+	for n, v in ipairs(acchist) do
+		aveacc:add(v)
+	end
+	oldVel = vel
+
 	-- Timer settings
 	if player:isInWater() or player:isInLava() then
 		waterTimer = 20
@@ -123,7 +147,13 @@ function events.TICK()
 	local lrVel = vel:crossed(dir.x_z:normalized()).y
 	local udVel = vel.y
 	local diagCancel = math.abs(lrVel) - math.abs(fbVel)
-	
+
+	-- Directional acceleration
+	local fbAcc = aveacc:dot((dir.x_z):normalize())
+	local lrAcc = aveacc:crossed(dir.x_z:normalized()).y
+	local udAcc = aveacc.y
+	local accDiagCancel = math.abs(lrAcc) - math.abs(fbAcc)
+
 	-- Static yaw
 	staticYaw = math.clamp(staticYaw, bodyYaw - 45, bodyYaw + 45)
 	staticYaw = math.lerp(staticYaw, bodyYaw, onGround and math.clamp(vel:length(), 0, 1) or 0.25)
@@ -154,17 +184,21 @@ function events.TICK()
 		
 		-- Assumed climbing
 		pitch.target = 0
+
+	elseif player:getVehicle() then
+
+		pitch.target = math.clamp((fbAcc * 0.5 + udAcc) * 20, -20, 20)
 		
 	elseif (pose.swim or waterTimer == 0) and not effects.cF then
-		
+
 		-- While "swimming" or outside of water
 		pitch.target = math.clamp(-udVel * 40 * -(math.abs(player:getLookDir().y * 2) - 1), -20, 20)
-		
+
 	else
 		
 		-- Assumed floating in water
 		pitch.target = math.clamp((fbVel + math.max(-udVel, 0) + (math.abs(lrVel) * diagCancel) * 4) * 80, -20, 20)
-		
+
 	end
 	
 	-- Y axis control
@@ -180,7 +214,11 @@ function events.TICK()
 		
 		-- When using an elytra
 		roll.target = math.clamp((-lrVel * 20) - (yawDif * math.clamp(fbVel, -1, 1)), -20, 20)
-		
+
+    elseif player:getVehicle() then
+
+       roll.target = math.clamp(((mountFlip and -1 or 1) * lrAcc * accDiagCancel * 80) - (yawDif * math.clamp(fbAcc, -1, 1)), -20, 20)
+
 	else
 		
 		-- Assumed floating in water
