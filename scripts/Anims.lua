@@ -39,7 +39,10 @@ v.legs = 1
 local waterTimer = 0
 local canTwirl = false
 local oldVel = vectors.vec3(0.0, 0.0, 0.0)
+local poshist = {}
+local velhist = {}
 local acchist = {}
+local dupvec = function (v) return vectors.vec3(v.x, v.y, v.z) end
 
 -- Arms setup
 local leftArmLerp  = lerp.new(armsMove.curr and 1 or 0, 0.5)
@@ -109,21 +112,21 @@ function events.TICK()
 	local onGround = ground()
 
 	local acc = nil
-	local veh = player:getVehicle()
-	if veh then
-		if veh:getType() == "create:carriage_contraption" then
-			acc = veh:getVelocity()
-		else
-			acc = vectors.vec3(vel.x, vel.y, vel.z)
-		end
+	table.insert(poshist, #poshist + 1, dupvec(player:getPos()))
+	if #poshist > 3 then
+		local v = dupvec(poshist[4]):scale(1.5):add(dupvec(poshist[3]):scale(-2.0)):add(dupvec(poshist[2]):scale(0.5))
+		local a = dupvec(poshist[4]):scale(2.0):add(dupvec(poshist[3]):scale(-5.0)):add(dupvec(poshist[2]):scale(4.0)):add(dupvec(poshist[1]):scale(-1.0))
+		table.insert(velhist, #velhist + 1, v)
+		table.insert(acchist, #acchist + 1, a)
+		table.remove(poshist, 1)
+		table.remove(velhist, 1)
 	else
-		acc = vectors.vec3(0.0, 0.0, 0.0)
+		table.insert(velhist, #velhist + 1, vectors.vec3(0, 0, 0))
+		table.insert(acchist, #acchist + 1, vectors.vec3(0, 0, 0))
 	end
-	acc:sub(oldVel)
-	if #acchist > 9 then
+	if #acchist > 1 then
 		table.remove(acchist, 1)
 	end
-	table.insert(acchist, #acchist + 1, acc)
 	local aveacc = vectors.vec3()
 	for n, v in ipairs(acchist) do
 		aveacc:add(v)
@@ -187,7 +190,7 @@ function events.TICK()
 
 	elseif player:getVehicle() then
 
-		pitch.target = math.clamp((fbAcc * 0.5 + udAcc) * 20, -20, 20)
+		pitch.target = math.clamp((mountFlip and 1 or -1) * (fbAcc * 0.5 + udAcc) * 20, -20, 20)
 		
 	elseif (pose.swim or waterTimer == 0) and not effects.cF then
 
@@ -215,9 +218,9 @@ function events.TICK()
 		-- When using an elytra
 		roll.target = math.clamp((-lrVel * 20) - (yawDif * math.clamp(fbVel, -1, 1)), -20, 20)
 
-    elseif player:getVehicle() then
+	elseif player:getVehicle() then
 
-       roll.target = math.clamp(((mountFlip and -1 or 1) * lrAcc * accDiagCancel * 80) - (yawDif * math.clamp(fbAcc, -1, 1)), -20, 20)
+		 roll.target = math.clamp((mountFlip and 1 or -1) * (lrAcc * accDiagCancel * 80) - (yawDif * math.clamp(fbAcc, -1, 1)), -20, 20)
 
 	else
 		
