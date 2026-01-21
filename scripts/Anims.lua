@@ -131,6 +131,7 @@ function events.TICK()
 	for n, v in ipairs(acchist) do
 		aveacc:add(v)
 	end
+	aveacc:scale(2.0)
 	oldVel = vel
 
 	-- Timer settings
@@ -220,7 +221,7 @@ function events.TICK()
 
 	elseif player:getVehicle() then
 
-		 roll.target = math.clamp((mountFlip and 1 or -1) * (lrAcc * accDiagCancel * 80) - (yawDif * math.clamp(fbAcc, -1, 1)), -20, 20)
+		roll.target = math.clamp((-lrAcc * accDiagCancel * 80) - (yawDif * math.clamp(fbAcc, -1, 1)), -20, 20)
 
 	else
 		
