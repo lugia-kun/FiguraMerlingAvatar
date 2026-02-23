@@ -38,7 +38,6 @@ v.legs = 1
 -- Variables
 local waterTimer = 0
 local canTwirl = false
-local oldVel = vectors.vec3(0.0, 0.0, 0.0)
 local poshist = {}
 local velhist = {}
 local acchist = {}
@@ -124,15 +123,13 @@ function events.TICK()
 		table.insert(velhist, #velhist + 1, vectors.vec3(0, 0, 0))
 		table.insert(acchist, #acchist + 1, vectors.vec3(0, 0, 0))
 	end
-	if #acchist > 1 then
+	if #acchist > 3 then
 		table.remove(acchist, 1)
 	end
 	local aveacc = vectors.vec3()
 	for n, v in ipairs(acchist) do
-		aveacc:add(v)
+		aveacc:add(dupvec(v):scale(n))
 	end
-	aveacc:scale(2.0)
-	oldVel = vel
 
 	-- Timer settings
 	if player:isInWater() or player:isInLava() then
