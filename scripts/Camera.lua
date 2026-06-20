@@ -57,7 +57,7 @@ local function cameraReset()
 	
 	-- Resets camera
 	renderer
-		:cameraPivot(nil)
+		:offsetCameraPivot(nil)
 		:eyeOffset(nil)
 		:crosshairOffset(nil)
 	
@@ -68,7 +68,10 @@ end
 
 -- Head midRender event
 function events.RENDER(delta, context)
-	
+	if not (context == "FIRST_PERSON" or context == "RENDER" or (not client.isHudEnabled() and context ~= "MINECRAFT_GUI")) then
+		return
+	end
+
 	-- If camera is allowed
 	if allowCam.curr then
 		
@@ -109,25 +112,24 @@ function events.RENDER(delta, context)
 			
 			-- Convert target to screenspace
 			crossLerp.target = targetPos and vectors.worldToScreenSpace(targetPos).xy * client:getScaledWindowSize() / 2 or vec(0, 0)
-			
+
 			-- Changes camera pivot
+			camPos = (parts.group.Player:getTruePos() + camera:getTruePos()) / 32
 			renderer
-				:cameraPivot(camPos)
+				:offsetCameraPivot(camPos)
 				:eyeOffset(allowEye.curr and eyePos or nil)
-				:crosshairOffset(not allowEye.curr and crossLerp.currPos or nil)
+				:setCrosshairOffset(not allowEye.curr and crossLerp.currPos or nil)
 			
 			-- Hide head
-			parts.group.Head:visible(not (renderer:isFirstPerson() and (context == "OTHER" or context == "RENDER")))
+			--parts.group.Head:visible(not (renderer:isFirstPerson() and (context == "OTHER" or context == "RENDER")))
 			
 		else
-			
 			-- Reset camera
 			cameraReset()
 			
 		end
 		
 	else
-		
 		-- Reset camera
 		cameraReset()
 		
