@@ -109,14 +109,13 @@ function events.RENDER(delta, context)
 			
 			-- Get target pos
 			local targetPos = (tarEntity and tarEntityPos) or (tarBlock and not tarBlock:isAir() and tarBlockPos) or nil
-			
+
 			-- Convert target to screenspace
 			crossLerp.target = targetPos and vectors.worldToScreenSpace(targetPos).xy * client:getScaledWindowSize() / 2 or vec(0, 0)
 
 			-- Changes camera pivot
-			camPos = (parts.group.Player:getTruePos() + camera:getTruePos()) / 32
 			renderer
-				:offsetCameraPivot(camPos)
+				:offsetCameraPivot(eyePos / 2)
 				:eyeOffset(allowEye.curr and eyePos or nil)
 				:setCrosshairOffset(not allowEye.curr and crossLerp.currPos or nil)
 			
