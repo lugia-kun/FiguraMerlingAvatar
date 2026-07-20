@@ -68,8 +68,11 @@ end
 
 -- Head midRender event
 function events.RENDER(delta, context)
-	if not (context == "FIRST_PERSON" or context == "RENDER" or context == "MINECRAFT_GUI") then
+	if context ~= "RENDER" and context ~= "FIRST_PERSON" then
 		return
+	end
+	if context == "RENDER" then
+		delta = delta * 0.75
 	end
 
 	-- If camera is allowed
