@@ -68,7 +68,7 @@ end
 
 -- Head midRender event
 function events.RENDER(delta, context)
-	if not (context == "FIRST_PERSON" or context == "RENDER" or (not client.isHudEnabled() and context ~= "MINECRAFT_GUI")) then
+	if not (context == "FIRST_PERSON" or context == "RENDER" or context == "MINECRAFT_GUI") then
 		return
 	end
 
