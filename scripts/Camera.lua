@@ -76,7 +76,7 @@ function events.RENDER(delta, context)
 	end
 
 	-- If camera is allowed
-	if allowCam.curr then
+	if allowCam.curr and not player:getVehicle() then
 		
 		-- Get camera position
 		local camPos = camera:partToWorldMatrix():apply() + (player:getPose() == "SLEEPING" and vec(0, 0.2, 0) or 0)
@@ -107,20 +107,20 @@ function events.RENDER(delta, context)
 			
 			-- Positions
 			local eyePos = -((pos + vec(0, height, 0)) - camPos)
-			local tarEntity, tarEntityPos = player:getTargetedEntity(reach)
-			local tarBlock, tarBlockPos = player:getTargetedBlock(true, reach)
+			--local tarEntity, tarEntityPos = player:getTargetedEntity(reach)
+			--local tarBlock, tarBlockPos = player:getTargetedBlock(true, reach)
 			
 			-- Get target pos
-			local targetPos = (tarEntity and tarEntityPos) or (tarBlock and not tarBlock:isAir() and tarBlockPos) or nil
+			--local targetPos = (tarEntity and tarEntityPos) or (tarBlock and not tarBlock:isAir() and tarBlockPos) or nil
 
 			-- Convert target to screenspace
-			crossLerp.target = targetPos and vectors.worldToScreenSpace(targetPos).xy * client:getScaledWindowSize() / 2 or vec(0, 0)
+			--crossLerp.target = targetPos and vectors.worldToScreenSpace(targetPos).xy * client:getScaledWindowSize() / 2 or vec(0, 0)
 
 			-- Changes camera pivot
 			renderer
 				:offsetCameraPivot(eyePos / 2)
 				:eyeOffset(allowEye.curr and eyePos or nil)
-				:setCrosshairOffset(not allowEye.curr and crossLerp.currPos or nil)
+				--:setCrosshairOffset(not allowEye.curr and crossLerp.currPos or nil)
 			
 			-- Hide head
 			--parts.group.Head:visible(not (renderer:isFirstPerson() and (context == "OTHER" or context == "RENDER")))
